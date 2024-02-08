@@ -1,6 +1,6 @@
 package com.github.youssefwadie.webfluxchat.sse;
 
-import com.github.youssefwadie.webfluxchat.ChatMessage;
+import com.github.youssefwadie.webfluxchat.dto.ChatMessageDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,10 +14,10 @@ import reactor.core.publisher.Sinks;
 
 @Component
 public class MessageEventHandler {
-    private final Sinks.Many<ChatMessage> messagesSinks;
+    private final Sinks.Many<ChatMessageDTO> messagesSinks;
     private final ObjectMapper objectMapper;
 
-    public MessageEventHandler(@Qualifier("chatMessageSinks") Sinks.Many<ChatMessage> messagesSinks,
+    public MessageEventHandler(@Qualifier("chatMessageSinks") Sinks.Many<ChatMessageDTO> messagesSinks,
                                ObjectMapper objectMapper) {
         this.messagesSinks = messagesSinks;
         this.objectMapper = objectMapper;
@@ -25,11 +25,11 @@ public class MessageEventHandler {
 
 
     public Mono<ServerResponse> sendMessage(ServerRequest request) {
-        final Mono<ChatMessage> chatMessageMono = request.bodyToMono(ChatMessage.class)
+        final Mono<ChatMessageDTO> chatMessageMono = request.bodyToMono(ChatMessageDTO.class)
                 .doOnSuccess(messagesSinks::tryEmitNext);
 
         return ServerResponse.ok()
-                .body(chatMessageMono, ChatMessage.class);
+                .body(chatMessageMono, ChatMessageDTO.class);
     }
 
     public Mono<ServerResponse> getMessages(@SuppressWarnings("unused") ServerRequest request) {

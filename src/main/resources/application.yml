@@ -1,0 +1,17 @@
+spring:
+  r2dbc:
+    properties:
+      schema: classpath:/schema.sql
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+app:
+  datasource:
+    r2dbc:
+      username: sa
+      password:
+      driver: h2
+      protocol: mem
+      database: chatdb

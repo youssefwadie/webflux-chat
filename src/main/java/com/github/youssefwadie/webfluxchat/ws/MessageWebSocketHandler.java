@@ -1,6 +1,6 @@
 package com.github.youssefwadie.webfluxchat.ws;
 
-import com.github.youssefwadie.webfluxchat.ChatMessage;
+import com.github.youssefwadie.webfluxchat.dto.ChatMessageDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -16,10 +16,10 @@ import reactor.core.publisher.SynchronousSink;
 
 @Component
 public class MessageWebSocketHandler implements WebSocketHandler {
-    private final Sinks.Many<ChatMessage> messagesSinks;
+    private final Sinks.Many<ChatMessageDTO> messagesSinks;
     private final ObjectMapper objectMapper;
 
-    public MessageWebSocketHandler(@Qualifier("chatMessageSinks") Sinks.Many<ChatMessage> messagesSinks,
+    public MessageWebSocketHandler(@Qualifier("chatMessageSinks") Sinks.Many<ChatMessageDTO> messagesSinks,
                                    ObjectMapper objectMapper) {
         this.messagesSinks = messagesSinks;
         this.objectMapper = objectMapper;
@@ -32,16 +32,16 @@ public class MessageWebSocketHandler implements WebSocketHandler {
                 .doOnNext(event -> {
                     try {
                         String json = event.getPayloadAsText();
-                        ChatMessage message = objectMapper.readValue(json, ChatMessage.class);
+                        ChatMessageDTO message = objectMapper.readValue(json, ChatMessageDTO.class);
                         messagesSinks.tryEmitNext(message);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
+                    } catch (JsonProcessingException ignored) {
+
                     }
                 })
                 .then();
 
         Flux<WebSocketMessage> source = messagesSinks.asFlux()
-                .handle((ChatMessage chatMessage,  SynchronousSink<WebSocketMessage> webSocketMessageSink) -> {
+                .handle((ChatMessageDTO chatMessage, SynchronousSink<WebSocketMessage> webSocketMessageSink) -> {
                     try {
                         String json = objectMapper.writeValueAsString(chatMessage);
                         WebSocketMessage webSocketMessage = session.textMessage(json + "\n");
